@@ -121,19 +121,49 @@ export default function AdminCardsPage() {
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">URL de la imagen</label>
-                <input
-                  type="url"
-                  value={formData.image}
-                  onChange={(e) => setFormData({ ...formData, image: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
-                  required
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Imagen de la carta</label>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    value={formData.image}
+                    onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                    className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
+                    placeholder="URL de la imagen"
+                  />
+                  <label className="flex-shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
+                    Subir foto
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            setFormData({ ...formData, image: String(reader.result) });
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                  </label>
+                </div>
+                {formData.image && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <img
+                      src={formData.image}
+                      alt="Vista previa"
+                      className="w-16 h-16 object-contain border rounded-lg"
+                    />
+                    <span className="text-xs text-gray-500">Vista previa</span>
+                  </div>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Precio (€)</label>
@@ -142,7 +172,7 @@ export default function AdminCardsPage() {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   required
                 />
               </div>
@@ -152,7 +182,7 @@ export default function AdminCardsPage() {
                   type="text"
                   value={formData.set}
                   onChange={(e) => setFormData({ ...formData, set: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   required
                 />
               </div>
@@ -162,7 +192,7 @@ export default function AdminCardsPage() {
                   type="text"
                   value={formData.rarity}
                   onChange={(e) => setFormData({ ...formData, rarity: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   required
                 />
               </div>
@@ -171,7 +201,7 @@ export default function AdminCardsPage() {
                 <select
                   value={formData.condition}
                   onChange={(e) => setFormData({ ...formData, condition: e.target.value as Card['condition'] })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                 >
                   <option value="new">Nuevo</option>
                   <option value="mint">Mint</option>
@@ -185,7 +215,7 @@ export default function AdminCardsPage() {
                 <select
                   value={formData.availability}
                   onChange={(e) => setFormData({ ...formData, availability: e.target.value as Card['availability'] })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                 >
                   <option value="in_stock">En stock</option>
                   <option value="low_stock">Pocas unidades</option>
@@ -197,7 +227,7 @@ export default function AdminCardsPage() {
                 <textarea
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500"
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   rows={3}
                   required
                 />

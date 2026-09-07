@@ -25,6 +25,8 @@ export default function Header() {
             <Link href="/" className="text-white hover:text-yellow-200 transition-colors font-medium">
               Home
             </Link>
+            {!isAdmin && (
+              <>
             <Link href="/favorites" className="text-white hover:text-yellow-200 transition-colors font-medium relative">
               ❤️ Favoritos
               {favorites.length > 0 && (
@@ -41,6 +43,8 @@ export default function Header() {
                 </span>
               )}
             </Link>
+              </>
+            )}
 
             {isAdmin && (
               <Link href="/admin" className="text-white hover:text-yellow-200 transition-colors font-medium">
