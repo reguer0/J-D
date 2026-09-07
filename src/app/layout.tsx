@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { CartProvider } from "@/context/CartContext";
-import { FavoritesProvider } from "@/context/FavoritesContext";
-import { AuthProvider } from "@/context/AuthContext";
+import Providers from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "J&D Cartas Pokémon",
@@ -17,13 +15,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="antialiased">
-        <AuthProvider>
-          <CartProvider>
-            <FavoritesProvider>
-              {children}
-            </FavoritesProvider>
-          </CartProvider>
-        </AuthProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -27,6 +27,7 @@ export interface User {
 export interface Order {
   id: string;
   userId: string;
+  userEmail: string;
   items: CartItem[];
   total: number;
   status: 'pending' | 'accepted' | 'rejected';

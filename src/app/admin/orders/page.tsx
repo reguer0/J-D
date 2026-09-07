@@ -2,14 +2,16 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useOrders } from '@/context/OrderContext';
 import { useRouter } from 'next/navigation';
 import { Order } from '@/types';
 import Header from '@/components/Header';
 
 const mockOrders: Order[] = [
   {
-    id: '1',
+    id: 'JD-1',
     userId: '2',
+    userEmail: 'user@jd.com',
     items: [
       { card: { id: '1', name: 'Charizard VMAX', image: 'https://images.pokemontcg.io/swsh35/010_hires.png', price: 89.99, description: '', condition: 'mint', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Shining Fates' }, quantity: 1 },
       { card: { id: '2', name: 'Pikachu VMAX', image: 'https://images.pokemontcg.io/swsh4/044_hires.png', price: 45.50, description: '', condition: 'new', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Vivid Voltage' }, quantity: 2 },
@@ -19,8 +21,9 @@ const mockOrders: Order[] = [
     createdAt: new Date('2026-09-05'),
   },
   {
-    id: '2',
+    id: 'JD-2',
     userId: '2',
+    userEmail: 'user@jd.com',
     items: [
       { card: { id: '8', name: 'Umbreon VMAX', image: 'https://images.pokemontcg.io/swsh6/095_hires.png', price: 120.00, description: '', condition: 'mint', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Evolving Skies' }, quantity: 1 },
     ],
@@ -44,14 +47,21 @@ const statusColors = {
 
 export default function AdminOrdersPage() {
   const { user, isAdmin } = useAuth();
+  const { orders: contextOrders } = useOrders();
   const router = useRouter();
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
     if (!user || !isAdmin) {
       router.push('/');
     }
   }, [user, isAdmin, router]);
+
+  useEffect(() => {
+    const allOrders = [...contextOrders, ...mockOrders];
+    const unique = allOrders.filter((o, i, arr) => arr.findIndex(x => x.id === o.id) === i);
+    setOrders(unique);
+  }, [contextOrders]);
 
   if (!user || !isAdmin) {
     return null;
@@ -81,7 +91,7 @@ export default function AdminOrdersPage() {
                   <div>
                     <h2 className="text-xl font-bold text-gray-800">Pedido #{order.id}</h2>
                     <p className="text-gray-500 text-sm">
-                      {order.createdAt.toLocaleDateString('es-ES')} • Usuario ID: {order.userId}
+                      {order.createdAt.toLocaleDateString('es-ES')} • {order.userEmail}
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
@@ -106,7 +116,7 @@ export default function AdminOrdersPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-4 flex justify-between items-center">
+                <div className="border-t pt-4 flex flex-wrap justify-between items-center gap-4">
                   <span className="text-xl font-bold text-red-600">Total: €{order.total.toFixed(2)}</span>
                   {order.status === 'pending' && (
                     <div className="flex gap-3">

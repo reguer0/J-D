@@ -96,9 +96,12 @@ export default function CartPage() {
                 <span className="text-2xl font-black text-red-600">€{total.toFixed(2)}</span>
               </div>
             </div>
-            <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3">
-              Comprar
-            </button>
+            <Link
+              href="/checkout"
+              className="block w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3 text-center"
+            >
+              Finalizar compra
+            </Link>
             <button
               onClick={clearCart}
               className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors"
