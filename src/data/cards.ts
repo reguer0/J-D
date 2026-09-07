@@ -1,0 +1,148 @@
+import { Card } from '@/types';
+
+export const pokemonCards: Card[] = [
+  {
+    id: '1',
+    name: 'Charizard VMAX',
+    image: 'https://images.pokemontcg.io/swsh35/010_hires.png',
+    price: 89.99,
+    description: 'Charizard VMAX de la expansión Shining Fates. Carta ultra rara con textura especial.',
+    condition: 'mint',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Shining Fates'
+  },
+  {
+    id: '2',
+    name: 'Pikachu VMAX',
+    image: 'https://images.pokemontcg.io/swsh4/044_hires.png',
+    price: 45.50,
+    description: 'Pikachu VMAX de la expansión Vivid Voltage. Arte dinámico de Pikachu gigante.',
+    condition: 'new',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Vivid Voltage'
+  },
+  {
+    id: '3',
+    name: 'Mewtwo GX',
+    image: 'https://images.pokemontcg.io/sm11/028_hires.png',
+    price: 25.00,
+    description: 'Mewtwo GX de la expansión Dragon Majesty. Carta con efecto GX poderoso.',
+    condition: 'used',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare GX',
+    set: 'Dragon Majesty'
+  },
+  {
+    id: '4',
+    name: 'Eevee VMAX',
+    image: 'https://images.pokemontcg.io/swsh6/034_hires.png',
+    price: 32.75,
+    description: 'Eevee VMAX de la expansión Evolving Skies. Featuring adorable Eevee evolution artwork.',
+    condition: 'mint',
+    availability: 'low_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Evolving Skies'
+  },
+  {
+    id: '5',
+    name: 'Lugia V',
+    image: 'https://images.pokemontcg.io/swsh9/018_hires.png',
+    price: 55.00,
+    description: 'Lugia V de la expansión Lost Origin. Carta con increíble arte de Lugia legendario.',
+    condition: 'new',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare V',
+    set: 'Lost Origin'
+  },
+  {
+    id: '6',
+    name: 'Rayquaza VMAX',
+    image: 'https://images.pokemontcg.io/swsh7/010_hires.png',
+    price: 75.25,
+    description: 'Rayquaza VMAX Alternate Art de Evolving Skies. Una de las cartas más codiciadas.',
+    condition: 'mint',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Evolving Skies'
+  },
+  {
+    id: '7',
+    name: 'Gengar VMAX',
+    image: 'https://images.pokemontcg.io/swsh5/027_hires.png',
+    price: 38.50,
+    description: 'Gengar VMAX de la expansión Fusion Strike. Arte aterrador de Gengar.',
+    condition: 'good',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Fusion Strike'
+  },
+  {
+    id: '8',
+    name: 'Umbreon VMAX',
+    image: 'https://images.pokemontcg.io/swsh6/095_hires.png',
+    price: 120.00,
+    description: 'Umbreon VMAX Alternate Art de Evolving Skies. La carta más valiosa del set.',
+    condition: 'mint',
+    availability: 'low_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Evolving Skies'
+  },
+  {
+    id: '9',
+    name: 'Arceus VSTAR',
+    image: 'https://images.pokemontcg.io/swsh9/076_hires.png',
+    price: 42.00,
+    description: 'Arceus VSTAR de la expansión Lost Origin. Poder divino en forma de carta.',
+    condition: 'new',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare VSTAR',
+    set: 'Lost Origin'
+  },
+  {
+    id: '10',
+    name: 'Dragonite VMAX',
+    image: 'https://images.pokemontcg.io/swsh7/073_hires.png',
+    price: 28.99,
+    description: 'Dragonite VMAX de Evolving Skies. El querido dragón en su forma más poderosa.',
+    condition: 'good',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Evolving Skies'
+  },
+  {
+    id: '11',
+    name: 'Mew VMAX',
+    image: 'https://images.pokemontcg.io/swsh5/114_hires.png',
+    price: 65.00,
+    description: 'Mew VMAX de Fusion Strike. Colorido arte del mítico Pokémon psíquico.',
+    condition: 'mint',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare Ultra',
+    set: 'Fusion Strike'
+  },
+  {
+    id: '12',
+    name: 'Gardevoir ex',
+    image: 'https://images.pokemontcg.io/sv2/096_hires.png',
+    price: 15.50,
+    description: 'Gardevoir ex de Paldea Evolved. Nueva mecánica ex en formato moderno.',
+    condition: 'new',
+    availability: 'in_stock',
+    category: 'pokemon',
+    rarity: 'Rare ex',
+    set: 'Paldea Evolved'
+  },
+];
