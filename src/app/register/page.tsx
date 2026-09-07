@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import { isValidEmail } from '@/utils/validation';
 import Link from 'next/link';
 
 export default function RegisterPage() {
@@ -10,17 +11,21 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [emailTouched, setEmailTouched] = useState(false);
   const { register } = useAuth();
   const router = useRouter();
+
+  const emailValid = isValidEmail(email.trim());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    if (register(name, email, password)) {
+    const result = register(name, email, password);
+    if (result.ok) {
       router.push('/');
     } else {
-      setError('Error al crear la cuenta');
+      setError(result.error || 'Error al crear la cuenta');
     }
   };
 
@@ -60,10 +65,18 @@ export default function RegisterPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 text-gray-900"
+              onBlur={() => setEmailTouched(true)}
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                emailTouched && email && !emailValid
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                  : 'border-gray-200 focus:border-red-500 focus:ring-red-200'
+              }`}
               placeholder="tu@email.com"
               required
             />
+            {emailTouched && email && !emailValid && (
+              <p className="text-red-500 text-xs mt-1">Formato de email no válido. Ejemplo: tu@email.com</p>
+            )}
           </div>
 
           <div>
@@ -72,10 +85,15 @@ export default function RegisterPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-200 text-gray-900"
-              placeholder="••••••••"
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-gray-900 ${
+                password && password.length < 6
+                  ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
+                  : 'border-gray-200 focus:border-red-500 focus:ring-red-200'
+              }`}
+              placeholder="Mínimo 6 caracteres"
               required
             />
+            <p className="text-xs text-gray-400 mt-1">La contraseña debe tener al menos 6 caracteres</p>
           </div>
 
           <button

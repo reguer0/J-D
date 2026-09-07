@@ -16,10 +16,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
 
-    if (login(email, password)) {
+    const result = login(email, password);
+    if (result.ok) {
       router.push('/');
     } else {
-      setError('Email o contraseña incorrectos');
+      setError(result.error || 'Error al iniciar sesión');
     }
   };
 
@@ -73,16 +74,17 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
-          <p className="text-gray-500">
-            ¿No tienes cuenta?{' '}
-            <Link href="/register" className="text-red-600 hover:text-red-700 font-medium">
-              Regístrate
-            </Link>
-          </p>
+        <div className="mt-6 pt-6 border-t">
+          <p className="text-gray-500 text-center mb-4">¿No tienes cuenta?</p>
+          <Link
+            href="/register"
+            className="block w-full border-2 border-red-600 text-red-600 font-bold py-3 px-6 rounded-lg hover:bg-red-50 transition-colors text-center"
+          >
+            Regístrate gratis
+          </Link>
         </div>
 
-        <div className="mt-8 pt-6 border-t">
+        <div className="mt-6 pt-6 border-t">
           <p className="text-xs text-gray-400 text-center mb-2">Cuentas de prueba:</p>
           <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-600 space-y-1">
             <p><strong>Admin:</strong> admin@jd.com / admin123</p>
