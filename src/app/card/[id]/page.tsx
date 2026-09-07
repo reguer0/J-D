@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useParams } from 'next/navigation';
-import { pokemonCards } from '@/data/cards';
+import { useCards } from '@/context/CardsContext';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +32,8 @@ const availabilityColors = {
 
 export default function CardDetail() {
   const params = useParams();
-  const card = pokemonCards.find(c => c.id === params.id);
+  const { cards } = useCards();
+  const card = cards.find(c => c.id === params.id);
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
   const { user } = useAuth();

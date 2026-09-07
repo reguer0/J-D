@@ -63,7 +63,7 @@ export default function Header() {
                   <span className="font-medium hidden sm:block">{user.name}</span>
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={() => logout()}
                   className="text-white hover:text-yellow-200 transition-colors text-sm font-medium"
                 >
                   Salir

@@ -1,83 +1,129 @@
 'use client';
 
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { User } from '@/types';
-import { isValidEmail, RegisterResult, LoginResult } from '@/utils/validation';
 
 interface AuthContextType {
   user: User | null;
-  login: (email: string, password: string) => LoginResult;
-  register: (name: string, email: string, password: string) => RegisterResult;
-  logout: () => void;
+  loading: boolean;
+  login: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  register: (name: string, email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
+  logout: () => Promise<void>;
   isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-let users: (User & { password: string })[] = [
-  { id: '1', name: 'Admin', email: 'admin@jd.com', password: 'admin123', role: 'admin' },
-  { id: '2', name: 'Usuario', email: 'user@jd.com', password: 'user123', role: 'user' },
-];
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const browserClient = createClient(supabaseUrl, supabaseAnonKey);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = (email: string, password: string): LoginResult => {
-    const normalizedEmail = email.trim().toLowerCase();
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data } = await browserClient.auth.getSession();
+      if (data.session) {
+        const { data: profile } = await browserClient
+          .from('profiles')
+          .select('*')
+          .eq('id', data.session.user.id)
+          .single();
 
-    if (!normalizedEmail || !password) {
-      return { ok: false, error: 'Introduce email y contraseña' };
-    }
-
-    if (!isValidEmail(normalizedEmail)) {
-      return { ok: false, error: 'El formato del email no es válido' };
-    }
-
-    const found = users.find(u => u.email === normalizedEmail && u.password === password);
-    if (found) {
-      const { password: _, ...userWithoutPassword } = found;
-      setUser(userWithoutPassword);
-      return { ok: true };
-    }
-
-    return { ok: false, error: 'Email o contraseña incorrectos' };
-  };
-
-  const register = (name: string, email: string, password: string): RegisterResult => {
-    const normalizedEmail = email.trim().toLowerCase();
-
-    if (!name.trim()) {
-      return { ok: false, error: 'El nombre es obligatorio' };
-    }
-
-    if (!isValidEmail(normalizedEmail)) {
-      return { ok: false, error: 'El formato del email no es válido. Ejemplo: tu@email.com' };
-    }
-
-    if (password.length < 6) {
-      return { ok: false, error: 'La contraseña debe tener al menos 6 caracteres' };
-    }
-
-    const emailExists = users.some(u => u.email === normalizedEmail);
-    if (emailExists) {
-      return { ok: false, error: 'Este email ya está registrado. Prueba a iniciar sesión.' };
-    }
-
-    const newUser: User = {
-      id: String(Date.now()),
-      name: name.trim(),
-      email: normalizedEmail,
-      role: 'user',
+        setUser({
+          id: data.session.user.id,
+          name: profile?.name || data.session.user.email?.split('@')[0] || 'Usuario',
+          email: data.session.user.email || '',
+          role: profile?.role || 'user',
+        });
+      }
+      setLoading(false);
     };
-    users.push({ ...newUser, password });
-    setUser(newUser);
+
+    loadUser();
+
+    const { data: listener } = browserClient.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setUser(null);
+        setLoading(false);
+      }
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    const { error } = await browserClient.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { ok: false, error: 'Email o contraseña incorrectos' };
+    }
+
+    const { data, error: profileError } = await browserClient.auth.getUser();
+    if (profileError || !data.user) {
+      return { ok: true }; // la sesión se carga por listener
+    }
+
+    const { data: profile } = await browserClient
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    setUser({
+      id: data.user.id,
+      name: profile?.name || data.user.email?.split('@')[0] || 'Usuario',
+      email: data.user.email || '',
+      role: profile?.role || 'user',
+    });
+
     return { ok: true };
   };
 
-  const logout = () => setUser(null);
+  const register = async (name: string, email: string, password: string) => {
+    const { data, error } = await browserClient.auth.signUp({
+      email,
+      password,
+      options: { data: { name } },
+    });
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        return { ok: false, error: 'Este email ya está registrado. Prueba a iniciar sesión.' };
+      }
+      return { ok: false, error: error.message };
+    }
+
+    if (data.user) {
+      // Crear el perfil
+      const { error: profileError } = await browserClient
+        .from('profiles')
+        .insert({ id: data.user.id, name, email, role: 'user' });
+
+      if (profileError) {
+        // El trigger de la base de datos puede haber creado el perfil ya
+      }
+
+      setUser({
+        id: data.user.id,
+        name,
+        email,
+        role: 'user',
+      });
+    }
+
+    return { ok: true };
+  };
+
+  const logout = async () => {
+    await browserClient.auth.signOut();
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAdmin: user?.role === 'admin' }}>
+    <AuthContext.Provider value={{ user, loading, login, register, logout, isAdmin: user?.role === 'admin' }}>
       {children}
     </AuthContext.Provider>
   );

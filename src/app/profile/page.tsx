@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/context/AuthContext';
 import { useCart } from '@/context/CartContext';
-import { pokemonCards } from '@/data/cards';
+import { useCards } from '@/context/CardsContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -11,7 +11,13 @@ import { useEffect } from 'react';
 export default function ProfilePage() {
   const { user, logout, isAdmin } = useAuth();
   const { items, total } = useCart();
+  const { cards } = useCards();
   const router = useRouter();
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/');
+  };
 
   useEffect(() => {
     if (!user) {
@@ -52,7 +58,7 @@ export default function ProfilePage() {
               <>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-red-600">{pokemonCards.length}</p>
+                    <p className="text-2xl font-bold text-red-600">{cards.length}</p>
                     <p className="text-gray-500 text-sm">Cartas disponibles</p>
                   </div>
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
@@ -69,11 +75,8 @@ export default function ProfilePage() {
                     Gestionar pedidos
                   </Link>
                   <button
-                    onClick={() => {
-                      logout();
-                      router.push('/');
-                    }}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors"
+                    onClick={handleLogout}
+                    className="block w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors"
                   >
                     Cerrar sesión
                   </button>
@@ -100,10 +103,7 @@ export default function ProfilePage() {
                     Ver carrito
                   </Link>
                   <button
-                    onClick={() => {
-                      logout();
-                      router.push('/');
-                    }}
+                    onClick={handleLogout}
                     className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors"
                   >
                     Cerrar sesión

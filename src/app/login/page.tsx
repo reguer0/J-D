@@ -12,11 +12,11 @@ export default function LoginPage() {
   const { login } = useAuth();
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    const result = login(email, password);
+    const result = await login(email, password);
     if (result.ok) {
       router.push('/');
     } else {

@@ -2,17 +2,20 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import { useCards } from '@/context/CardsContext';
 import { useRouter } from 'next/navigation';
-import { pokemonCards } from '@/data/cards';
 import { Card } from '@/types';
 import Header from '@/components/Header';
 
 export default function AdminCardsPage() {
   const { user, isAdmin } = useAuth();
+  const { cards, reloadCards } = useCards();
   const router = useRouter();
-  const [cards, setCards] = useState<Card[]>(pokemonCards);
   const [editingCard, setEditingCard] = useState<Card | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     image: '',
@@ -21,7 +24,7 @@ export default function AdminCardsPage() {
     condition: 'new' as Card['condition'],
     availability: 'in_stock' as Card['availability'],
     rarity: '',
-    set: '',
+    setname: '',
   });
 
   useEffect(() => {
@@ -43,32 +46,80 @@ export default function AdminCardsPage() {
       condition: 'new',
       availability: 'in_stock',
       rarity: '',
-      set: '',
+      setname: '',
     });
     setEditingCard(null);
     setShowAddForm(false);
+    setMessage('');
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    if (editingCard) {
-      setCards(cards.map(c =>
-        c.id === editingCard.id
-          ? { ...c, ...formData, price: parseFloat(formData.price) }
-          : c
-      ));
-    } else {
-      const newCard: Card = {
-        id: String(Date.now()),
-        ...formData,
-        price: parseFloat(formData.price),
-        category: 'pokemon',
-      };
-      setCards([...cards, newCard]);
+    setUploading(true);
+    setMessage('');
+
+    try {
+      const form = new FormData();
+      form.append('file', file);
+
+      const response = await fetch('/api/cards/upload', { method: 'POST', body: form });
+      const data = await response.json();
+
+      if (response.ok && data.url) {
+        setFormData(current => ({ ...current, image: data.url }));
+        setMessage('Imagen subida correctamente');
+      } else {
+        setMessage(`Error al subir imagen: ${data.error || 'Desconocido'}`);
+      }
+    } catch {
+      setMessage('Error al subir la imagen');
+    } finally {
+      setUploading(false);
     }
+  };
 
-    resetForm();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaving(true);
+    setMessage('');
+
+    try {
+      const payload = {
+        name: formData.name,
+        image: formData.image,
+        price: parseFloat(formData.price),
+        description: formData.description,
+        condition: formData.condition,
+        availability: formData.availability,
+        rarity: formData.rarity,
+        set_name: formData.setname,
+      };
+
+      const url = editingCard ? `/api/cards/${editingCard.id}` : '/api/cards';
+      const method = editingCard ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage(editingCard ? 'Carta actualizada correctamente' : 'Carta añadida correctamente');
+        await reloadCards();
+        resetForm();
+      } else {
+        setMessage(`Error: ${data.error || 'No se pudo guardar la carta'}`);
+      }
+    } catch {
+      setMessage('Error de conexión al guardar');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleEdit = (card: Card) => {
@@ -81,14 +132,25 @@ export default function AdminCardsPage() {
       condition: card.condition,
       availability: card.availability,
       rarity: card.rarity,
-      set: card.set,
+      setname: card.set,
     });
     setShowAddForm(true);
+    setMessage('');
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('¿Estás seguro de eliminar esta carta?')) {
-      setCards(cards.filter(c => c.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm('¿Estás seguro de eliminar esta carta?')) return;
+
+    try {
+      const response = await fetch(`/api/cards/${id}`, { method: 'DELETE' });
+      if (response.ok) {
+        await reloadCards();
+      } else {
+        const data = await response.json();
+        setMessage(`Error al eliminar: ${data.error || ''}`);
+      }
+    } catch {
+      setMessage('Error de conexión al eliminar');
     }
   };
 
@@ -108,6 +170,12 @@ export default function AdminCardsPage() {
             + Añadir carta
           </button>
         </div>
+
+        {message && (
+          <div className={`p-4 rounded-lg mb-6 ${message.startsWith('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+            {message}
+          </div>
+        )}
 
         {showAddForm && (
           <div className="bg-white rounded-xl shadow-md p-6 mb-8">
@@ -136,21 +204,13 @@ export default function AdminCardsPage() {
                     placeholder="URL de la imagen"
                   />
                   <label className="flex-shrink-0 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-lg cursor-pointer transition-colors">
-                    Subir foto
+                    {uploading ? 'Subiendo...' : 'Subir foto'}
                     <input
                       type="file"
                       accept="image/*"
                       className="hidden"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) {
-                          const reader = new FileReader();
-                          reader.onload = () => {
-                            setFormData({ ...formData, image: String(reader.result) });
-                          };
-                          reader.readAsDataURL(file);
-                        }
-                      }}
+                      onChange={handleImageUpload}
+                      disabled={uploading}
                     />
                   </label>
                 </div>
@@ -180,8 +240,8 @@ export default function AdminCardsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">Set</label>
                 <input
                   type="text"
-                  value={formData.set}
-                  onChange={(e) => setFormData({ ...formData, set: e.target.value })}
+                  value={formData.setname}
+                  onChange={(e) => setFormData({ ...formData, setname: e.target.value })}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-red-500 text-gray-900"
                   required
                 />
@@ -235,9 +295,10 @@ export default function AdminCardsPage() {
               <div className="md:col-span-2 flex gap-3">
                 <button
                   type="submit"
-                  className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                  disabled={saving || uploading}
+                  className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-2 px-6 rounded-lg transition-colors"
                 >
-                  {editingCard ? 'Guardar cambios' : 'Añadir carta'}
+                  {saving ? 'Guardando...' : editingCard ? 'Guardar cambios' : 'Añadir carta'}
                 </button>
                 <button
                   type="button"

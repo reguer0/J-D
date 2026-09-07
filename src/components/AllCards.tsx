@@ -1,6 +1,6 @@
 'use client';
 
-import { pokemonCards } from '@/data/cards';
+import { useCards } from '@/context/CardsContext';
 import PokemonCard from './PokemonCard';
 
 interface AllCardsProps {
@@ -8,11 +8,21 @@ interface AllCardsProps {
 }
 
 export default function AllCards({ searchQuery = '' }: AllCardsProps) {
-  const filteredCards = pokemonCards.filter(card =>
+  const { cards, loading } = useCards();
+
+  const filteredCards = cards.filter(card =>
     card.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     card.set.toLowerCase().includes(searchQuery.toLowerCase()) ||
     card.rarity.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center py-20">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -2,75 +2,87 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useOrders } from '@/context/OrderContext';
 import { useRouter } from 'next/navigation';
-import { Order } from '@/types';
 import Header from '@/components/Header';
 
-const mockOrders: Order[] = [
-  {
-    id: 'JD-1',
-    userId: '2',
-    userEmail: 'user@jd.com',
-    items: [
-      { card: { id: '1', name: 'Charizard VMAX', image: 'https://images.pokemontcg.io/swsh35/010_hires.png', price: 89.99, description: '', condition: 'mint', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Shining Fates' }, quantity: 1 },
-      { card: { id: '2', name: 'Pikachu VMAX', image: 'https://images.pokemontcg.io/swsh4/044_hires.png', price: 45.50, description: '', condition: 'new', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Vivid Voltage' }, quantity: 2 },
-    ],
-    total: 180.99,
-    status: 'pending',
-    createdAt: new Date('2026-09-05'),
-  },
-  {
-    id: 'JD-2',
-    userId: '2',
-    userEmail: 'user@jd.com',
-    items: [
-      { card: { id: '8', name: 'Umbreon VMAX', image: 'https://images.pokemontcg.io/swsh6/095_hires.png', price: 120.00, description: '', condition: 'mint', availability: 'in_stock', category: 'pokemon', rarity: 'Rare Ultra', set: 'Evolving Skies' }, quantity: 1 },
-    ],
-    total: 120.00,
-    status: 'pending',
-    createdAt: new Date('2026-09-06'),
-  },
-];
-
-const statusLabels = {
+const statusLabels: Record<string, string> = {
   pending: 'Pendiente',
   accepted: 'Aceptado',
   rejected: 'Rechazado',
 };
 
-const statusColors = {
+const statusColors: Record<string, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
   accepted: 'bg-green-100 text-green-800',
   rejected: 'bg-red-100 text-red-800',
 };
 
+interface OrderRow {
+  id: string;
+  order_code: string;
+  user_email: string;
+  user_name: string;
+  total: number;
+  status: string;
+  shipping_address: any;
+  created_at: string;
+  order_items: Array<{
+    id: string;
+    card_id: string;
+    card_name: string;
+    card_image: string | null;
+    unit_price: number;
+    quantity: number;
+  }>;
+}
+
 export default function AdminOrdersPage() {
   const { user, isAdmin } = useAuth();
-  const { orders: contextOrders } = useOrders();
   const router = useRouter();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+
+  const loadOrders = async () => {
+    try {
+      const response = await fetch('/api/orders');
+      const data = await response.json();
+      if (Array.isArray(data)) {
+        setOrders(data);
+      }
+    } catch {
+      // sin datos
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!user || !isAdmin) {
       router.push('/');
+      return;
     }
+    loadOrders();
   }, [user, isAdmin, router]);
-
-  useEffect(() => {
-    const allOrders = [...contextOrders, ...mockOrders];
-    const unique = allOrders.filter((o, i, arr) => arr.findIndex(x => x.id === o.id) === i);
-    setOrders(unique);
-  }, [contextOrders]);
 
   if (!user || !isAdmin) {
     return null;
   }
 
-  const handleStatusChange = (orderId: string, status: 'accepted' | 'rejected') => {
-    setOrders(orders.map(o =>
-      o.id === orderId ? { ...o, status } : o
-    ));
+  const handleStatusChange = async (orderId: string, status: 'accepted' | 'rejected') => {
+    const response = await fetch('/api/orders', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: orderId, status }),
+    });
+
+    if (response.ok) {
+      setMessage(`Pedido ${status === 'accepted' ? 'aceptado' : 'rechazado'} correctamente`);
+      await loadOrders();
+    } else {
+      const data = await response.json();
+      setMessage(`Error: ${data.error || 'No se pudo actualizar'}`);
+    }
   };
 
   return (
@@ -79,9 +91,19 @@ export default function AdminOrdersPage() {
       <main className="container mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">Gestionar Pedidos</h1>
 
-        {orders.length === 0 ? (
+        {message && (
+          <div className={`p-4 rounded-lg mb-6 ${message.startsWith('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+            {message}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600"></div>
+          </div>
+        ) : orders.length === 0 ? (
           <div className="bg-white rounded-xl shadow-md p-8 text-center">
-            <p className="text-gray-500 text-lg">No hay pedidos pendientes</p>
+            <p className="text-gray-500 text-lg">No hay pedidos registrados</p>
           </div>
         ) : (
           <div className="space-y-6">
@@ -89,9 +111,9 @@ export default function AdminOrdersPage() {
               <div key={order.id} className="bg-white rounded-xl shadow-md p-6">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-800">Pedido #{order.id}</h2>
+                    <h2 className="text-xl font-bold text-gray-800">Pedido #{order.order_code}</h2>
                     <p className="text-gray-500 text-sm">
-                      {order.createdAt.toLocaleDateString('es-ES')} • {order.userEmail}
+                      {new Date(order.created_at).toLocaleDateString('es-ES')} • {order.user_name} ({order.user_email})
                     </p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[order.status]}`}>
@@ -101,23 +123,34 @@ export default function AdminOrdersPage() {
 
                 <div className="border-t pt-4 mb-4">
                   <div className="space-y-3">
-                    {order.items.map(item => (
-                      <div key={item.card.id} className="flex items-center gap-3">
-                        <img src={item.card.image} alt={item.card.name} className="w-12 h-12 object-contain" />
+                    {order.order_items?.map(item => (
+                      <div key={item.id} className="flex items-center gap-3">
+                        {item.card_image && (
+                          <img src={item.card_image} alt={item.card_name} className="w-12 h-12 object-contain" />
+                        )}
                         <div className="flex-1">
-                          <p className="font-medium text-gray-800">{item.card.name}</p>
+                          <p className="font-medium text-gray-800">{item.card_name}</p>
                           <p className="text-sm text-gray-500">x{item.quantity}</p>
                         </div>
                         <span className="font-bold text-gray-800">
-                          €{(item.card.price * item.quantity).toFixed(2)}
+                          €{(item.unit_price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     ))}
                   </div>
                 </div>
 
+                {order.shipping_address && (
+                  <div className="border-t pt-4 mb-4">
+                    <p className="text-sm text-gray-500 mb-1">Datos de envío:</p>
+                    <p className="text-sm text-gray-700">
+                      {order.shipping_address.fullName} • {order.shipping_address.street}, {order.shipping_address.city} ({order.shipping_address.zipCode}), {order.shipping_address.country}
+                    </p>
+                  </div>
+                )}
+
                 <div className="border-t pt-4 flex flex-wrap justify-between items-center gap-4">
-                  <span className="text-xl font-bold text-red-600">Total: €{order.total.toFixed(2)}</span>
+                  <span className="text-xl font-bold text-red-600">Total: €{Number(order.total).toFixed(2)}</span>
                   {order.status === 'pending' && (
                     <div className="flex gap-3">
                       <button
