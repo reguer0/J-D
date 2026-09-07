@@ -1,12 +1,27 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import PokemonCard from '@/components/PokemonCard';
 import Link from 'next/link';
 
 export default function FavoritesPage() {
   const { favorites } = useFavorites();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

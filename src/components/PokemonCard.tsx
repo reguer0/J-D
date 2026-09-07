@@ -1,8 +1,11 @@
 'use client';
 
+import { useState } from 'react';
 import { Card } from '@/types';
 import { useCart } from '@/context/CartContext';
 import { useFavorites } from '@/context/FavoritesContext';
+import { useAuth } from '@/context/AuthContext';
+import LoginPromptModal from './LoginPromptModal';
 import Link from 'next/link';
 
 interface PokemonCardProps {
@@ -32,6 +35,27 @@ const availabilityColors = {
 export default function PokemonCard({ card }: PokemonCardProps) {
   const { addToCart } = useCart();
   const { toggleFavorite, isFavorite } = useFavorites();
+  const { user } = useAuth();
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [modalAction, setModalAction] = useState('');
+
+  const handleAddToCart = () => {
+    if (!user) {
+      setModalAction('comprar');
+      setShowLoginModal(true);
+      return;
+    }
+    addToCart(card);
+  };
+
+  const handleToggleFavorite = () => {
+    if (!user) {
+      setModalAction('guardar en favoritos');
+      setShowLoginModal(true);
+      return;
+    }
+    toggleFavorite(card);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 flex flex-col">
@@ -54,8 +78,9 @@ export default function PokemonCard({ card }: PokemonCardProps) {
             <h3 className="font-bold text-lg text-gray-800">{card.name}</h3>
           </Link>
           <button
-            onClick={() => toggleFavorite(card)}
+            onClick={handleToggleFavorite}
             className="text-2xl transition-transform hover:scale-110"
+            title={user ? 'Añadir a favoritos' : 'Inicia sesión para guardar'}
           >
             {isFavorite(card.id) ? '❤️' : '🤍'}
           </button>
@@ -77,7 +102,7 @@ export default function PokemonCard({ card }: PokemonCardProps) {
         <div className="flex items-center justify-between mt-auto">
           <span className="text-2xl font-bold text-red-600">€{card.price.toFixed(2)}</span>
           <button
-            onClick={() => addToCart(card)}
+            onClick={handleAddToCart}
             disabled={card.availability === 'out_of_stock'}
             className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-2 px-4 rounded-lg transition-colors"
           >
@@ -85,6 +110,12 @@ export default function PokemonCard({ card }: PokemonCardProps) {
           </button>
         </div>
       </div>
+
+      <LoginPromptModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action={modalAction}
+      />
     </div>
   );
 }

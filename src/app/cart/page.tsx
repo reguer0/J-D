@@ -1,11 +1,26 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
+import { useAuth } from '@/context/AuthContext';
 import Header from '@/components/Header';
 import Link from 'next/link';
 
 export default function CartPage() {
   const { items, removeFromCart, updateQuantity, clearCart, total } = useCart();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/login');
+    }
+  }, [user, router]);
+
+  if (!user) {
+    return null;
+  }
 
   if (items.length === 0) {
     return (
